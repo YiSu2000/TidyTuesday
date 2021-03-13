@@ -1,0 +1,192 @@
+---
+title: "2021-02-23_Employment_and_Earning"
+author: "Yi Su"
+date: "02/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidytuesdayR)
+library(skimr)
+library(scales)
+tuesdata <- tidytuesdayR::tt_load('2021-02-23')
+earn <- tuesdata$earn
+employed <- tuesdata$employed
+```
+
+
+```{r total}
+employed <- employed%>%
+  filter(!is.na(industry), 
+         !industry %in% c("Women", "White", "Men", "Asian", "Black or African American",
+                          "Other services, except private households"))
+employed_total <- employed%>%
+  filter(race_gender == "TOTAL", year %in% 2018:2020)%>%
+  group_by(industry, year)%>%
+  summarize(number_employed  = sum(employ_n, na.rm = TRUE))%>%
+  ungroup()
+
+emp_total_2020<- employed_total%>%
+  filter(year == 2020)%>%
+  arrange(number_employed)%>%
+  mutate(percentage = str_c(
+    as.character(
+      round(number_employed/sum(number_employed)*100, digits = 1)), 
+    "%"))
+emp_total_2020$industry[emp_total_2020$industry == "Mining, quarrying, and oil and gas extraction"] <- "Mining"
+emp_total_2020$industry <- factor(emp_total_2020$industry)%>%
+  fct_reorder(emp_total_2020$number_employed)
+
+
+emp_total_2020%>%
+  ggplot(aes(x = industry, y = number_employed, fill = number_employed))+
+  geom_col()+
+  coord_flip()+
+  geom_text(aes(label = percentage), nudge_y = 2000000)+
+  labs(title = "Employment by Industry")+
+  xlab(label = "Industry")+
+  ylab(label = "Employment")+
+  scale_y_continuous(labels = unit_format(unit = "M", scale = 1e-6))+
+  scale_fill_continuous(type = "viridis")+
+  theme_minimal()+
+  theme(legend.position = "none",
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "#CCFFCC"),
+        plot.title = element_text(size=14, face= "bold", colour= "black" ))
+```
+```{r emp comparison by year}
+emp_total_comp<- employed_total%>%
+  filter(year == 2019 | year == 2020)%>%
+  group_by(year)%>%
+  mutate(percentage = round(number_employed/sum(number_employed)*100, digits = 2))%>%
+  ungroup()%>%
+  group_by(industry)%>%
+  mutate(p_diff = percentage - lag(percentage))%>%
+  filter(year == 2020)%>%
+  mutate(p_diff_d = if_else(p_diff >= 0,
+    str_c(as.character(round(p_diff, 2)),"%"), ""),
+  p_diff_y = if_else(p_diff < 0,
+    str_c(as.character(round(p_diff, 2)),"%"), ""))
+
+emp_total_comp$industry[emp_total_comp$industry == "Mining, quarrying, and oil and gas extraction"] <- "Mining"
+emp_total_comp$industry <- factor(emp_total_comp$industry)%>%
+  fct_reorder(emp_total_comp$p_diff)
+
+emp_total_comp%>%
+  ggplot(aes(x = industry, y = p_diff, fill = industry))+
+  geom_col(position = position_dodge())+
+  coord_flip()+
+  geom_text(aes(label = p_diff_d), nudge_y = 0.1, colour = "brown")+
+  geom_text(aes(label = p_diff_y), nudge_y = -0.1, colour = "brown")+
+  ylab(label = "Percent Difference")+
+  xlab(label = "Industry")+
+  labs(title = "Percent Difference on Employment, 2019-2020")+
+  scale_fill_viridis_d()+
+  theme_minimal()+
+  theme(legend.position = "none",
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "#CCFFCC"),
+        plot.title = element_text(size=14, face= "bold", colour= "black" ))
+```
+```{r what happened to leisure and hospitality in 2020}
+lh <- employed%>%
+  filter(industry == "Leisure and hospitality", 
+         race_gender == "TOTAL", 
+         year == 2019 | year == 2020)%>%
+  group_by(major_occupation, year)%>%
+  summarise(employ = sum(employ_n, na.rm = TRUE))%>%
+  mutate(percentage = round(employ/sum(employ)*100, 2))%>%
+  mutate(p_diff = percentage - lag(percentage))%>%
+  filter(year == 2020)%>%
+  mutate(diff_text = str_c(as.character(round(p_diff,1)),
+                           "%"))%>%
+  mutate(major_occupation = unlist(strsplit(major_occupation, "[,]"))[1])
+
+lh%>%
+  ggplot(aes(x = major_occupation, y = p_diff, fill = major_occupation))+
+  geom_col()+
+  geom_text(aes(label = diff_text), nudge_y = -1, colour = "brown")+
+  coord_flip()+
+  scale_fill_viridis_d()+
+  xlab(label = "Occupation")+
+  ylab(label = "Percent Difference")+
+  labs(title = "Percent change in Major Occupation, 2019-2020",
+       subtitle = "Leisure and Hospitality Industry")+
+  theme_minimal()+
+  theme(legend.position = "none",
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "#CCFFCC"),
+        plot.title = element_text(size=14, face= "bold", colour= "black" ))
+  
+```
+```{r 2020 earning}
+earning_total <- earn%>%
+  filter(year == 2020 , ethnic_origin == "All Origins",
+         sex != "Both Sexes", race != "All Races")%>%
+  group_by(sex, race, age)%>%
+  mutate(year_week_earning = round(sum(n_persons*median_weekly_earn)/sum(n_persons)))%>%
+  filter(quarter == 1)%>%
+  ungroup()%>%
+  mutate(race = ifelse(race == "Black or African American", "African American",
+                       race))
+
+earning_total%>%
+  ggplot(aes(x = age, y = year_week_earning, group = interaction(sex, race), 
+             shape = sex, linetype = sex, color = race))+
+  geom_point()+
+  geom_line()+
+  scale_color_brewer(palette = "Set2")+
+  ylab(label = "Mean Median weekly wage")+
+  xlab(label = "Age Group")+
+  labs(title = "Wage by race and sex in 2020")+
+  theme_minimal()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "#CCFFCC"),
+        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        plot.title = element_text(size=14, face= "bold", colour= "black" ))
+```
+```{r wage 2019 vs. 2020}
+earning_comp <- earn%>%
+  filter(year == 2020 | year == 2019, ethnic_origin == "All Origins",
+         sex != "Both Sexes", race != "All Races")%>%
+  group_by(sex, race, age, year)%>%
+  mutate(year_week_earning = round(sum(n_persons*median_weekly_earn)/sum(n_persons)))%>%
+  filter(quarter == 1)%>%
+  ungroup()%>%
+  group_by(sex, race, age)%>%
+  mutate(percent_chg = 
+           round((year_week_earning -
+                    lag(year_week_earning))/lag(year_week_earning),3)*100)%>%
+  filter(year == 2020)%>%
+  mutate(race = ifelse(race == "Black or African American", "African American",
+                       race))
+  
+
+earning_comp%>%
+  ggplot(aes(x = age, y = percent_chg, group = interaction(sex, race), 
+             shape = sex, linetype = sex, color = race))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(~sex)+
+  scale_x_discrete(guide = guide_axis(n.dodge = 3))+
+  scale_color_brewer(palette = "Set2")+
+  ylab(label = "Percent Growth in Wage")+
+  xlab(label = "Age Group")+
+  labs(title = "Weekly Wage growth, 2019-2020")+
+  ylim(0,15)+
+  theme_minimal()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        plot.background = element_rect(fill = "#CCFFCC"),
+        plot.title = element_text(size=14, face= "bold", colour= "black" ))
+```
+
