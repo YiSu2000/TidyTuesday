@@ -189,4 +189,3 @@ earning_comp%>%
         plot.background = element_rect(fill = "#CCFFCC"),
         plot.title = element_text(size=14, face= "bold", colour= "black" ))
 ```
-
