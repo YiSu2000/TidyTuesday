@@ -11,6 +11,7 @@ library(tidyverse)
 library(tidytuesdayR)
 library(skimr)
 library(scales)
+library(here)
 tuesdata <- tidytuesdayR::tt_load('2021-02-23')
 earn <- tuesdata$earn
 employed <- tuesdata$employed
@@ -56,6 +57,9 @@ emp_total_2020%>%
         panel.grid.minor = element_blank(),
         plot.background = element_rect(fill = "#CCFFCC"),
         plot.title = element_text(size=14, face= "bold", colour= "black" ))
+
+ggsave(here("Graphs", "2021-02-23", "Employ_by_indus.pdf"),
+       width = 9, height = 5.5, device = cairo_pdf)
 ```
 ```{r emp comparison by year}
 emp_total_comp<- employed_total%>%
@@ -91,6 +95,8 @@ emp_total_comp%>%
         panel.grid.minor = element_blank(),
         plot.background = element_rect(fill = "#CCFFCC"),
         plot.title = element_text(size=14, face= "bold", colour= "black" ))
+ggsave(here("Graphs", "2021-02-23", "Pct_diff_emp.pdf"),
+       width = 9, height = 5.5, device = cairo_pdf)
 ```
 ```{r what happened to leisure and hospitality in 2020}
 lh <- employed%>%
@@ -122,6 +128,8 @@ lh%>%
         panel.grid.minor = element_blank(),
         plot.background = element_rect(fill = "#CCFFCC"),
         plot.title = element_text(size=14, face= "bold", colour= "black" ))
+ggsave(here("Graphs", "2021-02-23", "Pct_chg_maj.pdf"),
+       width = 9, height = 5.5, device = cairo_pdf)
   
 ```
 ```{r 2020 earning}
@@ -151,6 +159,8 @@ earning_total%>%
         axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
         axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
         plot.title = element_text(size=14, face= "bold", colour= "black" ))
+ggsave(here("Graphs", "2021-02-23", "wage_sex_race.pdf"),
+       width = 9, height = 5.5, device = cairo_pdf)
 ```
 ```{r wage 2019 vs. 2020}
 earning_comp <- earn%>%
@@ -188,4 +198,6 @@ earning_comp%>%
         axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
         plot.background = element_rect(fill = "#CCFFCC"),
         plot.title = element_text(size=14, face= "bold", colour= "black" ))
+ggsave(here("Graphs", "2021-02-23", "growth_wage.pdf"),
+       width = 9, height = 5.5, device = cairo_pdf)
 ```
