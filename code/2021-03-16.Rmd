@@ -1,0 +1,183 @@
+---
+title: '2021-03-16'
+author: "YS"
+date: "3/20/2021"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidytuesdayR)
+library(skimr)
+library(scales)
+library(here)
+library(forcats)
+library(tools)
+
+library(zoo)
+#as.yearmon
+
+tuesdata <- tidytuesdayR::tt_load('2021-03-16')
+tuesdata <- tidytuesdayR::tt_load(2021, week = 12)
+
+games <- tuesdata$games %>%
+  drop_na()%>%
+  filter(avg_peak_perc != "NaN%")
+```
+
+```{r game avg play time series filter for games from 2012}
+avg_m <- games %>%
+  mutate(month_n = match(month, month.name))%>%
+#convert moth name to numbers
+  mutate(date_ym = str_c(year, "-", month_n))
+
+#find the top 5 game with highest average user in 2012
+#group_by(gamename)%>%
+  #mutate(release = min(year))%>%
+  #use mutate instead of summarize to save other columns
+  #filter for games released before 2012
+  #ungroup()%>%
+
+#find the top 6 game with highest average user in 2018
+top6 <- avg_m%>%
+  filter(year == 2018)%>%
+  arrange(desc(avg))%>%
+  select(gamename)%>%
+  unique()%>%
+  head()
+
+#notice the counter strike row is the sum of all CS titles games, so we delet it
+
+avg_m2 <- avg_m%>%
+  mutate(date_my = as.Date(as.yearmon(avg_m$date_ym)))%>%
+  filter(gamename %in% top6$gamename, 
+         year >= 2018)
+  
+avg_m2$gamename <- factor(avg_m2$gamename)%>%
+  fct_relevel(top6$gamename)
+
+  #simplify names
+avg_m2 <- avg_m2%>%
+  mutate(gamename = recode(gamename,
+                           "PLAYERUNKNOWN'S BATTLEGROUNDS" = "PUBG",
+                           "Dota 2" = "Dota 2",
+                           "Counter-Strike: Global Offensive" = "CSGO",
+                           "Monster Hunter: World" = "MH: World",
+                           "Tom Clancy's Rainbow Six Siege" = "Rainbow Six S",
+                           "Grand Theft Auto V" = "GTA V"))
+
+
+avg_m2%>%
+  ggplot(aes(x = date_my, y = avg / 10000, color = gamename, group =gamename)) + 
+  geom_line() +
+  labs(title = "Average Player at the Same Time, 2018-2020",
+       subtitle = "For Top 6 Game with Most avg. player in 2018")+
+  xlab(label = "Date")+
+  ylab(label = "Avg. Player / 10000")+
+  scale_color_brewer(name = "Game",
+                     palette = 'Dark2') +
+  theme_minimal()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "#CCFFFF"),
+        plot.title = element_text(size=14, face= "bold", colour= "black" ))
+  
+ggsave(here("Graphs", "2021-03-16", "game_top6.png"),
+       width = 9, height = 5.5, device = 'png')
+```
+```{r what's going on for PUBG}
+pubg <- avg_m%>%
+  mutate(date_my = as.Date(as.yearmon(avg_m$date_ym)))%>%
+  filter(gamename == "PLAYERUNKNOWN'S BATTLEGROUNDS")
+
+pubg %>%
+  ggplot(aes(x = date_my, y = gain/10000, group = 1, color = 'Dark2')) + 
+  geom_line() +
+  geom_hline(yintercept = 0, linetype = "dashed")+
+  scale_x_date(date_breaks = "6 months", date_labels = "%Y-%m") +
+  labs(title = "Gain in Avg. Player for PUBG, 2017-2020")+
+  xlab(label = "Date")+
+  ylab(label = "Player Gain / 10000")+
+  theme_minimal()+
+  theme(legend.position = "none",
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "#CCFFFF"),
+        plot.title = element_text(size=14, face= "bold", colour= "black" ))
+ggsave(here("Graphs", "2021-03-16", "PUBG.png"),
+       width = 9, height = 5.5, device = 'png')
+```
+
+```{r which month do players play most}
+month_play <- games%>%
+  group_by(year, month)%>%
+  summarise(avg = sum(avg))%>%
+  ungroup()%>%
+  mutate(month_n = match(month, month.name))%>%
+#convert moth name to numbers
+  mutate(date_ym = str_c(year, "-", month_n))
+
+month_play <- month_play%>%
+  mutate(date_ym = as.Date(as.yearmon(date_ym)))
+
+month_play%>%
+  ggplot(aes(x = date_ym, y = avg/10000, color = 'Dark2'))+
+  geom_line()+
+  labs(title = "Avg. Player on Steam, 2012-2020") +
+  xlab(label = "Date")+
+  ylab(label = "Avg. Player / 10000")+
+  theme_minimal()+
+  theme(legend.position = "none",
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "#CCFFFF"),
+        plot.title = element_text(size=14, face= "bold", colour= "black" ))
+ggsave(here("Graphs", "2021-03-16", "total_steam.png"),
+       width = 9, height = 5.5, device = 'png')
+```
+
+```{r}
+agg_month <- month_play%>%
+  group_by(month, year)%>%
+  summarize(qavg = sum(avg),
+            month_n = month_n)%>%
+  unique()%>%
+  ungroup()%>%
+  group_by(year)%>%
+  mutate(p_qavg = qavg/sum(qavg))%>%
+  ungroup()%>%
+  group_by(month)%>%
+  summarise(avg_prop = round(mean(p_qavg) * 100, 2),
+            month_n = month_n)%>%
+  unique()%>%
+  #get the average proportion of player for that month among whole year between 2012-2020
+  ungroup()%>%
+  mutate(txt_prop = str_c(avg_prop, "%"))%>%
+  arrange(month_n)
+
+level <- agg_month$month
+
+agg_month$month <- factor(agg_month$month)%>%
+  fct_relevel(level)
+
+agg_month%>%
+  ggplot(aes(x=month, y=avg_prop, fill = month))+
+  geom_col()+
+  geom_line(aes(y = avg_prop + 3.3, group = 1, color = "Dark2"))+
+  geom_point(aes(y = avg_prop + 3.3, color = "Dark2"))+
+  geom_text(label = agg_month$txt_prop, nudge_y = 4.3, colour = "Red")+
+  labs(title = "Avg. Player By Month, 2012-2020",
+       subtitle = "Measured as the averge percentage share in a year") +
+  xlab(label = "Month")+
+  ylab(label = "Percent")+
+  scale_fill_viridis_d()+
+  theme_minimal()+
+  theme(legend.position = "none",
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "#CCFFFF"),
+        plot.title = element_text(size=14, face= "bold", colour= "black" ))
+ggsave(here("Graphs", "2021-03-16", "monthly.png"),
+       width = 9, height = 5.5, device = 'png')
+```
+
