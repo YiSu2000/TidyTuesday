@@ -1,4 +1,4 @@
-### [2020-03-16](https://github.com/YiSu2000/TidyTuesday/blob/main/code/2021-03-02.Rmd)
+### [2020-03-16](https://github.com/YiSu2000/TidyTuesday/blob/main/code/2021-03-16.Rmd)
 
 Data from [Steam](https://www.kaggle.com/michau96/popularity-of-games-on-steam).
 
