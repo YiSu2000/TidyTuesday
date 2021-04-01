@@ -6,7 +6,12 @@ This are some of my naive contributions to [#TidyTuesday challenge](https://gith
 
 ### [2021/02/23](https://github.com/YiSu2000/TidyTuesday/tree/main/Graphs/2021-02-23), Employment and Wage, from [BLS](https://www.bls.gov/cps/tables.htm#charemp_m)
 
-![./Graphs/2021-02-23/Employ_by_indus.png](https://github.com/YiSu2000/TidyTuesday/blob/main/Graphs/2021-02-23/Employ_by_indus.png)<br><br> ![./Graphs/2021-02-23/growth_wage.png](https://github.com/YiSu2000/TidyTuesday/blob/main/Graphs/2021-02-23/growth_wage.png)<br><br> ![./Graphs/2021-02-23/Pct_chg_maj.png](https://github.com/YiSu2000/TidyTuesday/blob/main/Graphs/2021-02-23/Pct_chg_maj.png)<br><br> ![./Graphs/2021-02-23/Pct_diff_emp.png](https://github.com/YiSu2000/TidyTuesday/blob/main/Graphs/2021-02-23/Pct_diff_emp.png)<br><br> ![./Graphs/2021-02-23/wage_sex_race.png](https://github.com/YiSu2000/TidyTuesday/blob/main/Graphs/2021-02-23/wage_sex_race.png)<br><br>
+![./Graphs/2021-02-23/Employ_by_indus.png](https://github.com/YiSu2000/TidyTuesday/blob/main/Graphs/2021-02-23/Employ_by_indus.png)<br><br> 
+![./Graphs/2021-02-23/Pct_diff_emp.png](https://github.com/YiSu2000/TidyTuesday/blob/main/Graphs/2021-02-23/Pct_diff_emp.png)<br><br>
+![./Graphs/2021-02-23/Pct_chg_maj.png](https://github.com/YiSu2000/TidyTuesday/blob/main/Graphs/2021-02-23/Pct_chg_maj.png)<br><br> 
+![./Graphs/2021-02-23/wage_sex_race.png](https://github.com/YiSu2000/TidyTuesday/blob/main/Graphs/2021-02-23/wage_sex_race.png)<br><br>
+![./Graphs/2021-02-23/growth_wage.png](https://github.com/YiSu2000/TidyTuesday/blob/main/Graphs/2021-02-23/growth_wage.png)<br><br>
+
 
 ### [2020-03-02](https://github.com/YiSu2000/TidyTuesday/blob/main/code/2021-03-02.Rmd), Super Bowl Ads. , from [FiveThirtyEight](https://github.com/fivethirtyeight/superbowl-ads).
 
